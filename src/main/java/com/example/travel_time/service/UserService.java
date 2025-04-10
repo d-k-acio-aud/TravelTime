@@ -2,8 +2,6 @@ package com.example.travel_time.service;
 
 
 import com.example.travel_time.model.User;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import com.example.travel_time.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,12 +28,12 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public User registerUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // Хешируем пароль
-        User savedUser = userRepository.save(user);
-        System.out.println("Сохраненный пользователь: " + savedUser);
-        return savedUser;
-    }
+//    public User registerUser(User user) {
+//        user.setPassword(passwordEncoder.encode(user.getPassword())); // Хешируем пароль
+//        User savedUser = userRepository.save(user);
+//        System.out.println("Сохраненный пользователь: " + savedUser);
+//        return savedUser;
+//    }
 
     public User updateUser(Long id, User newUser) {
         return userRepository.findById(id)
@@ -53,5 +51,9 @@ public class UserService {
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
-}
 
+
+    public Optional<User> findById(Long userId) {
+        return userRepository.findById(userId);
+    }
+}
