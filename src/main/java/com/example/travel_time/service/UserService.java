@@ -1,21 +1,22 @@
 package com.example.travel_time.service;
 
-
 import com.example.travel_time.model.User;
 import com.example.travel_time.repository.UserRepository;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-
 @Service
 public class UserService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository,
+                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -28,12 +29,15 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-//    public User registerUser(User user) {
-//        user.setPassword(passwordEncoder.encode(user.getPassword())); // Хешируем пароль
-//        User savedUser = userRepository.save(user);
-//        System.out.println("Сохраненный пользователь: " + savedUser);
-//        return savedUser;
-//    }
+    public Optional<User> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    public Long getUserIdByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(User::getId)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    }
 
     public User updateUser(Long id, User newUser) {
         return userRepository.findById(id)
@@ -52,8 +56,19 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-
-    public Optional<User> findById(Long userId) {
-        return userRepository.findById(userId);
+    public Long findIdByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return user.getId();
     }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    }
+
+    public List<User> searchUsers(String username) {
+        return userRepository.findByUsernameContainingIgnoreCase(username);
+    }
+
 }

@@ -1,10 +1,12 @@
 package com.example.travel_time.controller;
 
+import com.example.travel_time.model.Photo;
 import com.example.travel_time.model.Trip;
 import com.example.travel_time.service.TripService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,8 +32,8 @@ public class TripController {
     }
 
     @PostMapping
-    public ResponseEntity<Trip> addTrip(@RequestBody Trip trip) {
-        Trip savedTrip = tripService.addTrip(trip);
+    public ResponseEntity<Trip> addTrip(@RequestBody Trip trip, Principal principal) {
+        Trip savedTrip = tripService.addTrip(trip, principal.getName());
         return ResponseEntity.ok(savedTrip);
     }
 
@@ -49,5 +51,10 @@ public class TripController {
     public ResponseEntity<Void> deleteTrip(@PathVariable Long id) {
         tripService.deleteTrip(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/photos")
+    public ResponseEntity<List<Photo>> getTripPhotos(@PathVariable Long id) {
+        return ResponseEntity.ok(tripService.getTripPhotos(id));
     }
 }

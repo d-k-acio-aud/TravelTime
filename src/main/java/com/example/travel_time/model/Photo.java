@@ -1,6 +1,8 @@
 package com.example.travel_time.model;
 
 import com.example.travel_time.model.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +33,13 @@ public class Photo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "trip_id")
+    @JsonIgnore
+    private Trip trip;
 
     @PrePersist
     protected void onCreate() {

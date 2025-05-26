@@ -12,7 +12,7 @@ public class AuthRequest {
     private String username;
     private String password;
     private String email;
-    private String name;
-    private Role role;
+    //private String name;
+    private Role role = Role.USER;
 
 }

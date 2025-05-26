@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Travel Time</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body>
+<header class="bg-primary text-white p-3">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="/" class="text-white text-decoration-none">
+            <h1>Travel Time</h1>
+        </a>
+        <nav>
+            <a th:href="@{/profile/__${#authentication.name}__}" class="text-white mx-2">Мой профиль</a>
+            <a th:href="@{/friends}" class="text-white mx-2">Друзья</a>
+            <a th:href="@{/create-post}" class="btn btn-light mx-2">Новый пост</a>
+            <form th:action="@{/api/auth/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-light">Выйти</button>
+            </form>
+        </nav>
+    </div>
+</header>

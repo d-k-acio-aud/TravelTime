@@ -3,53 +3,40 @@ package com.example.travel_time.controller;
 import com.example.travel_time.model.Photo;
 import com.example.travel_time.service.PhotoService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-        import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.server.ResponseStatusException;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/photos")
 @RequiredArgsConstructor
 public class PhotoController {
+
     private final PhotoService photoService;
 
     @GetMapping
-    public ResponseEntity<List<Photo>> getUserPhotos(
-            @AuthenticationPrincipal UserDetails userDetails) {
-
-        if (userDetails == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated");
-        }
-
-        List<Photo> photos = photoService.getUserPhotos(userDetails.getUsername());
-        return ResponseEntity.ok(photos);
+    public ResponseEntity<List<Photo>> getUserPhotos() {
+        return ResponseEntity.ok(photoService.getAuthenticatedUserPhotos());
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<Photo> uploadPhoto(
-            @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
-        Photo photo = photoService.uploadPhoto(file, userDetails.getUsername());
-        return ResponseEntity.ok(photo);
+    public ResponseEntity<List<Photo>> uploadPhotos(
+            @RequestParam("photos") MultipartFile[] files,
+            @RequestParam Long tripId) throws IOException {
+        return ResponseEntity.ok(photoService.uploadPhotos(files, tripId));
     }
 
-    // Добавить обработку ошибок:
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePhoto(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<?> deletePhoto(@PathVariable Long id) {
         try {
-            photoService.deletePhoto(id, userDetails.getUsername());
+            photoService.deletePhoto(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             log.error("Error deleting photo: {}", e.getMessage());
