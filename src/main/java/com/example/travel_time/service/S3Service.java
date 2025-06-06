@@ -47,7 +47,9 @@ public class S3Service {
                     .key(generatedFileName)
                     .contentType(file.getContentType())
                     .contentLength(file.getSize())
+                    //.acl("public-read")
                     .build();
+
 
             s3Client.putObject(putObjectRequest,
                     RequestBody.fromBytes(file.getBytes()));

@@ -6,10 +6,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Preview images
     photoInput.addEventListener('change', function () {
-        imagePreview.innerHTML = '';
-        filesToUpload = Array.from(this.files);
+        const newFiles = Array.from(this.files);
 
-        filesToUpload.forEach(file => {
+        newFiles.forEach(file => {
+            filesToUpload.push(file);  // добавляем, а не заменяем
+
             const reader = new FileReader();
             reader.onload = function (e) {
                 const img = document.createElement('img');
@@ -19,7 +20,11 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             reader.readAsDataURL(file);
         });
+
+        // Сброс input, чтобы можно было выбрать тот же файл повторно
+        this.value = '';
     });
+
 
     // Form submission
     form.addEventListener('submit', async function (e) {

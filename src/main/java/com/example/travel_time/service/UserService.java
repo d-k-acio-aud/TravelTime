@@ -1,7 +1,10 @@
 package com.example.travel_time.service;
 
+import com.example.travel_time.dto.UserSearchDto;
 import com.example.travel_time.model.User;
 import com.example.travel_time.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,17 +12,13 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final FriendshipService  friendshipService;
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -69,6 +68,19 @@ public class UserService {
 
     public List<User> searchUsers(String username) {
         return userRepository.findByUsernameContainingIgnoreCase(username);
+    }
+    public List<UserSearchDto> searchUsersWithFriendStatus(String searchQuery, String currentUsername) {
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
+
+        return userRepository.findByUsernameContainingIgnoreCase(searchQuery).stream()
+                .filter(user -> !user.getUsername().equals(currentUsername))
+                .map(user -> new UserSearchDto(
+                        user,
+                        friendshipService.isFriend(currentUser, user),
+                        friendshipService.hasPendingRequest(currentUser, user)
+                ))
+                .toList();
     }
 
 }

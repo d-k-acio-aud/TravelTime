@@ -1,8 +1,11 @@
 package com.example.travel_time.controller;
 
+import com.example.travel_time.dto.UserSearchDto;
 import com.example.travel_time.model.User;
 import com.example.travel_time.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -53,7 +56,23 @@ public class UserController {
     }
 
     @GetMapping(params = "search")
-    public List<User> searchUsers(@RequestParam("search") String searchQuery) {
-        return userService.searchUsers(searchQuery);
+    public List<UserSearchDto> searchUsers(@RequestParam("search") String searchQuery,
+                                           @AuthenticationPrincipal Jwt jwt) {
+        String currentUsername = jwt.getClaimAsString("sub");
+        return userService.searchUsersWithFriendStatus(searchQuery, currentUsername);
     }
+    @GetMapping("/profile/{username}")
+    public ResponseEntity<User> getUserProfile(@PathVariable String username) {
+        Optional<User> userOptional = userService.getUserByUsername(username);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = userOptional.get();
+        // trips уже подгружены благодаря @OneToMany в сущности User
+        return ResponseEntity.ok(user);
+    }
+
+
 }

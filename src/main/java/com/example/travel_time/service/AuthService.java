@@ -61,8 +61,8 @@ public class AuthService {
         return ResponseEntity.ok("Registered");
     }
 
-    public void logout(HttpServletResponse response) throws IOException {
-        jwtUtil.logout(response);
-        response.sendRedirect("/login");
-    }
+//    public void logout(HttpServletResponse response) throws IOException {
+//        jwtUtil.logout(response);
+//        response.sendRedirect("/login");
+//    }
 }

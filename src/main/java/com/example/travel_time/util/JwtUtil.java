@@ -40,4 +40,15 @@ public class JwtUtil {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
+
+    public static String getUsernameFromToken(String jwtToken) {
+        if (jwtToken == null) return null;
+
+        return Jwts.parserBuilder()
+                .setSigningKey(KEY)
+                .build()
+                .parseClaimsJws(jwtToken)
+                .getBody()
+                .getSubject();
+    }
 }

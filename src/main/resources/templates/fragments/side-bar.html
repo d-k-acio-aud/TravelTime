@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="sidebar">
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-plane"></i> Travel Time
+        </div>
+        <nav class="nav flex-column mt-4">
+            <a class="nav-link" href="/home">
+                <i class="fas fa-home"></i> Home
+            </a>
+            <a class="nav-link" href="/profile">
+                <i class="fas fa-user"></i> Profile
+            </a>
+            <a class="nav-link" href="/friends">
+                <i class="fas fa-users"></i> Friends
+            </a>
+            <a class="nav-link" href="/photos">
+                <i class="fas fa-images"></i> Photos
+            </a>
+            <form th:action="@{/api/auth/logout}" method="POST" class="mt-4 px-3">
+                <button type="submit" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i> Log Out
+                </button>
+            </form>
+        </nav>
+    </div>
+
+    <style>
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            position: fixed;
+            height: 100vh;
+            padding: 20px 0;
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .nav-link {
+            padding: 12px 25px;
+            color: #333;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: #f1f1f1;
+            border-left: 4px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .nav-link i {
+            width: 25px;
+            text-align: center;
+            margin-right: 10px;
+        }
+    </style>
+</div>
+</body>
+</html>
