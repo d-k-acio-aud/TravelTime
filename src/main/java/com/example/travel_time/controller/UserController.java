@@ -41,6 +41,8 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User newUser) {
+        System.out.println("Updating user: " + id); // Логируем
+        System.out.println("New data: " + newUser); // Смотрим что пришло
         try {
             User updatedUser = userService.updateUser(id, newUser);
             return ResponseEntity.ok(updatedUser);
@@ -57,10 +59,10 @@ public class UserController {
 
     @GetMapping(params = "search")
     public List<UserSearchDto> searchUsers(@RequestParam("search") String searchQuery,
-                                           @AuthenticationPrincipal Jwt jwt) {
-        String currentUsername = jwt.getClaimAsString("sub");
-        return userService.searchUsersWithFriendStatus(searchQuery, currentUsername);
+                                           @AuthenticationPrincipal User user) {
+        return userService.searchUsersWithFriendStatus(searchQuery, user.getUsername());
     }
+
     @GetMapping("/profile/{username}")
     public ResponseEntity<User> getUserProfile(@PathVariable String username) {
         Optional<User> userOptional = userService.getUserByUsername(username);

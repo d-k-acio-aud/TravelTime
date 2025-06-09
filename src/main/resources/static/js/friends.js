@@ -1,97 +1,181 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const friendsList = document.getElementById('friendsList');
-    const pendingList = document.getElementById('pendingList');
+    //const pendingList = document.getElementById('pendingList');
     const searchInput = document.getElementById('searchInput');
     const friendTemplate = document.getElementById('friendTemplate').content;
 
-    // Load initial data
+    // Load data
     loadFriends();
-    loadPendingRequests();
+    //loadPendingRequests();
+    loadIncomingRequests();
+    loadOutgoingRequests();
 
-    // Search functionality
-    searchInput.addEventListener('input', function(e) {
-        debounce(() => searchUsers(e.target.value), 300)();
+    // Debounce search
+    const debouncedSearch = debounce((query) => {
+        searchUsers(query);
+    }, 300);
+
+    searchInput.addEventListener('input', function (e) {
+        debouncedSearch(e.target.value);
     });
 
     async function loadFriends() {
         try {
-            const response = await fetch('/api/friends');
-            if (!response.ok) throw new Error('Failed to load friends');
+            const response = await fetch('/api/friends', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error(await response.text());
             const friends = await response.json();
             renderFriends(friends, friendsList, false);
         } catch (error) {
-            showAlert('Error loading friends', 'danger');
+            showAlert('Error loading friends: ' + error.message, 'danger');
         }
     }
 
-    async function loadPendingRequests() {
+    // async function loadPendingRequests() {
+    //     try {
+    //          const response = await fetch('/api/friends/pending', {
+    //             credentials: 'include'
+    //         });
+    //         if (!response.ok) throw new Error(await response.text());
+    //         const requests = await response.json();
+    //         renderPendingRequests(requests);
+    //     } catch (error) {
+    //         showAlert('Error loading pending requests: ' + error.message, 'danger');
+    //     }
+    // }
+
+    async function loadIncomingRequests() {
         try {
-            const response = await fetch('/api/friends/pending');
-            if (!response.ok) throw new Error('Failed to load pending requests');
+            const response = await fetch('/api/friends/requests/incoming', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error(await response.text());
             const requests = await response.json();
-            renderPendingRequests(requests);
+            renderIncomingRequests(requests);
         } catch (error) {
-            showAlert('Error loading pending requests', 'danger');
+            showAlert('Error loading incoming requests: ' + error.message, 'danger');
         }
     }
 
-    function renderFriends(users, container, isSearchResult = false) {
+    async function loadOutgoingRequests() {
+        try {
+            const response = await fetch('/api/friends/requests/outgoing', {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error(await response.text());
+            const requests = await response.json();
+            renderOutgoingRequests(requests);
+        } catch (error) {
+            showAlert('Error loading outgoing requests: ' + error.message, 'danger');
+        }
+    }
+
+    function renderIncomingRequests(requests) {
+        const container = document.getElementById('incomingList');
         container.innerHTML = '';
-        users.forEach(user => {
+
+        if (requests.length === 0) {
+            container.innerHTML = '<p class="text-muted">You have no incoming requests</p>';
+            return;
+        }
+
+        requests.forEach(request => {
             const clone = document.importNode(friendTemplate, true);
-            const nameElement = clone.querySelector('.friend-name');
-            nameElement.textContent = user.username;
-            nameElement.style.cursor = 'pointer';
-            nameElement.classList.add('text-primary');
-            nameElement.addEventListener('click', () => {
-                window.location.href = `/friend-profile/${user.username}`;
+            clone.querySelector('.friend-name').textContent = request.username;
+            clone.querySelector('.friend-username').textContent = `@${request.username}`;
+
+            const actions = clone.querySelector('.friend-actions');
+            const acceptBtn = createButton('Accept', 'success', () => acceptRequest(request.id));
+            const declineBtn = createButton('Decline', 'danger', () => cancelRequest(request.id));
+            actions.append(acceptBtn, declineBtn);
+
+            container.appendChild(clone);
+        });
+    }
+
+    function renderOutgoingRequests(requests) {
+        const container = document.getElementById('outgoingList');
+        container.innerHTML = '';
+
+        if (requests.length === 0) {
+            container.innerHTML = '<p class="text-muted">You have no outgoing requests</p>';
+            return;
+        }
+
+        requests.forEach(request => {
+            const clone = document.importNode(friendTemplate, true);
+            clone.querySelector('.friend-name').textContent = request.username;
+            clone.querySelector('.friend-username').textContent = `@${request.username}`;
+
+            const actions = clone.querySelector('.friend-actions');
+            const cancelBtn = createButton('Cancel Request', 'secondary', async () => {
+                if (confirm('Cancel friend request?')) {
+                    await cancelRequest(request.id);
+                    loadOutgoingRequests();
+                }
             });
 
 
-            clone.querySelector('.friend-username').textContent = `@${user.username}`;
-
-            const actions = clone.querySelector('.friend-actions');
-
-            if (isSearchResult) {
-                if (!user.friend && !user.pending) {
-                    const addBtn = createButton('Add Friend', 'primary', () => sendFriendRequest(user.username));
-                    actions.appendChild(addBtn);
-                } else if (user.pending) {
-                    const info = document.createElement('span');
-                    info.className = 'text-muted small';
-                    info.textContent = 'Request pending';
-                    actions.appendChild(info);
-                } else if (user.friend) {
-                    const removeBtn = createButton('Remove', 'danger', () => removeFriend(user.id));
-                    actions.appendChild(removeBtn);
-                }
-
-            } else {
-                const removeBtn = createButton('Remove', 'danger', () => removeFriend(user.id));
-                actions.appendChild(removeBtn);
-            }
+            actions.append(cancelBtn);
 
             container.appendChild(clone);
         });
     }
 
 
-    function renderPendingRequests(requests) {
-        pendingList.innerHTML = '';
-        requests.forEach(request => {
+
+    function renderFriends(friends, container) {
+        container.innerHTML = '';
+
+        if (friends.length === 0) {
+            container.innerHTML = '<p class="text-muted">You have no friends</p>';
+            return;
+        }
+
+        friends.forEach(friend => {
             const clone = document.importNode(friendTemplate, true);
-            clone.querySelector('.friend-name').textContent = request.username;
-            clone.querySelector('.friend-username').textContent = `@${request.username}`;
+            const nameElement = clone.querySelector('.friend-name');
+            nameElement.textContent = friend.username;
+            nameElement.style.cursor = 'pointer';
+            nameElement.classList.add('text-primary');
+            nameElement.addEventListener('click', () => {
+                window.location.href = `/friend-profile/${friend.username}`;
+            });
 
-
+            clone.querySelector('.friend-username').textContent = `@${friend.username}`;
             const actions = clone.querySelector('.friend-actions');
-            const acceptBtn = createButton('Accept', 'success', () => acceptRequest(request.id));
-            const declineBtn = createButton('Decline', 'danger', () => declineRequest(request.id));
-            actions.append(acceptBtn, declineBtn);
 
-            pendingList.appendChild(clone);
+            const removeBtn = createButton('Remove Friend', 'danger', async () => {
+                if (confirm('Are you sure you want to remove this friend?')) {
+                    await cancelRequest(friend.friendshipId);
+                    await loadFriends();
+                }
+            });
+
+            actions.appendChild(removeBtn);
+
+            container.appendChild(clone);
         });
     }
+
+
+
+    // function renderPendingRequests(requests) {
+    //     pendingList.innerHTML = '';
+    //     requests.forEach(request => {
+    //         const clone = document.importNode(friendTemplate, true);
+    //         clone.querySelector('.friend-name').textContent = request.username;
+    //         clone.querySelector('.friend-username').textContent = `@${request.username}`;
+    //
+    //         const actions = clone.querySelector('.friend-actions');
+    //         const acceptBtn = createButton('Accept', 'success', () => acceptRequest(request.id));
+    //         const declineBtn = createButton('Decline', 'danger', () => cancelRequest(request.id));
+    //         actions.append(acceptBtn, declineBtn);
+    //
+    //         pendingList.appendChild(clone);
+    //     });
+    // }
 
     async function searchUsers(query) {
         const dropdown = document.getElementById('searchDropdown');
@@ -105,8 +189,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const encodedQuery = encodeURIComponent(query);
-            const response = await fetch(`/api/users?search=${encodedQuery}`);
-            if (!response.ok) throw new Error();
+            const response = await fetch(`/api/users?search=${encodedQuery}`, {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error(await response.text());
 
             const results = await response.json();
             resultsBox.innerHTML = '';
@@ -118,65 +204,71 @@ document.addEventListener('DOMContentLoaded', function() {
                     const div = document.createElement('div');
                     div.className = 'friend-card';
                     div.innerHTML = `
-        <img src="https://via.placeholder.com/50" class="friend-avatar" alt="">
-        <div class="friend-info">
-            <h5 class="friend-name mb-1">${user.username}</h5>
-            <small class="text-muted">@${user.username}</small>
-        </div>
-    `;
+                        <img src="https://via.placeholder.com/50" class="friend-avatar" alt="">
+                        <div class="friend-info">
+                            <h5 class="friend-name mb-1">${user.username}</h5>
+                            <small class="text-muted">@${user.username}</small>
+                        </div>
+                    `;
 
                     const actions = document.createElement('div');
                     actions.className = 'friend-actions';
-
-                    if (!user.friend && !user.pending) {
-                        const addBtn = createButton('Add Friend', 'primary', () => sendFriendRequest(user.username));
-                        actions.appendChild(addBtn);
-                    } else if (user.pending) {
-                        const info = document.createElement('span');
-                        info.className = 'text-muted small';
-                        info.textContent = 'Request pending';
-                        actions.appendChild(info);
-                    } else if (user.friend) {
-                        const removeBtn = createButton('Remove', 'danger', () => removeFriend(user.id));
-                        actions.appendChild(removeBtn);
-                    }
+                    const addBtn = createButton('Add Friend', 'primary', () => sendFriendRequest(user.username));
+                    actions.appendChild(addBtn);
 
                     div.appendChild(actions);
                     resultsBox.appendChild(div);
                 });
-
             }
 
             dropdown.style.display = 'block';
         } catch (error) {
+            showAlert('Search error: ' + error.message, 'danger');
             dropdown.style.display = 'none';
         }
     }
 
-
     async function sendFriendRequest(username) {
         try {
-            const response = await fetch(`/api/friends/request/${username}`, { method: 'POST' });
-            if (!response.ok) throw new Error('Request failed');
+            const response = await fetch(`/api/friends/request/${username}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error(await response.text());
+
             showAlert('Friend request sent!', 'success');
+
+            // 👇 Удалим из поиска (обновим окно)
+            document.getElementById('searchDropdown').style.display = 'none';
+            document.getElementById('searchResults').innerHTML = '';
+
+            // 👉 Перезагрузим pending-запросы
+            loadIncomingRequests();
+            loadOutgoingRequests();
+
+
         } catch (error) {
             showAlert(error.message, 'danger');
         }
     }
 
+
     async function acceptRequest(friendshipId) {
         try {
-            const response = await fetch(`/api/friends/accept/${friendshipId}`, { method: 'POST' });
-            if (!response.ok) throw new Error('Accept failed');
+            const response = await fetch(`/api/friends/accept/${friendshipId}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error(await response.text());
             loadFriends();
-            loadPendingRequests();
+            loadIncomingRequests();
+            loadOutgoingRequests();
             showAlert('Request accepted!', 'success');
         } catch (error) {
             showAlert(error.message, 'danger');
         }
     }
 
-    // Helper functions
     function createButton(text, style, onClick) {
         const btn = document.createElement('button');
         btn.className = `btn btn-${style} btn-sm`;
@@ -200,11 +292,27 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(alert);
         setTimeout(() => alert.remove(), 3000);
     }
-    document.addEventListener('click', function(event) {
+
+    document.addEventListener('click', function (event) {
         const searchBox = document.querySelector('.search-box');
         if (!searchBox.contains(event.target)) {
             document.getElementById('searchDropdown').style.display = 'none';
         }
     });
+
+    async function cancelRequest(friendshipId) {
+        try {
+            const response = await fetch(`/api/friends/cancel/${friendshipId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error(await response.text());
+            showAlert('Request cancelled', 'info');
+            await loadIncomingRequests();
+            await loadOutgoingRequests();
+        } catch (error) {
+            showAlert(error.message, 'danger');
+        }
+    }
 
 });

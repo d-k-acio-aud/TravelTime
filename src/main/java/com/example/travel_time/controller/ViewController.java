@@ -2,6 +2,8 @@ package com.example.travel_time.controller;
 
 import com.example.travel_time.model.Trip;
 import com.example.travel_time.model.User;
+import com.example.travel_time.service.FriendshipService;
+import com.example.travel_time.service.PhotoService;
 import com.example.travel_time.service.TripService;
 import com.example.travel_time.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -16,18 +18,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 public class ViewController {
 
     private final UserService userService;
-
+    private final TripService tripService;
+    private final PhotoService photoService;
+    private final FriendshipService friendshipService;
     @GetMapping("/")
     public String index(Model model) {
         model.addAttribute("title", "Travel Time - Your Journey Begins Here");
         return "index"; // Теперь используем index.html вместо home.html
     }
-
-//    @GetMapping("/home")
-//    public String home(Model model) {
-//        model.addAttribute("title", "Главная страница");
-//        return "home";
-//    }
 
     @GetMapping("/login")
     public String login(Model model) {
@@ -35,10 +33,6 @@ public class ViewController {
         return "login"; // Файл: src/main/resources/templates/login.html
     }
 
-    // Страница входа
-
-
-    // Страница регистрации
     @GetMapping("/register")
     public String register(Model model) {
         model.addAttribute("title", "Регистрация");
@@ -47,30 +41,25 @@ public class ViewController {
 
     @GetMapping("/profile")
     public String profilePage(Authentication authentication, Model model) {
-        String username = authentication.getName();
-        model.addAttribute("title", "Профиль: " + username);
+        User user = (User) authentication.getPrincipal();
+        String username = user.getUsername();
+
+        int tripCount = tripService.getUserTripsCount(user.getId());
+        long photoCount = photoService.getUserPhotosCount(user.getId());
+        int friendsCount = friendshipService.getFriendsCount(user.getId());
+
+        model.addAttribute("title", "Profile: " + username);
         model.addAttribute("username", username);
+        model.addAttribute("user", user);
+        model.addAttribute("tripCount", tripCount);
+        model.addAttribute("photoCount", photoCount);
+        model.addAttribute("friendsCount", friendsCount);
+
         return "profile";
     }
 
-//     //Профиль пользователя
-//    @GetMapping("/profile/{username}")
-//    public String profile(@PathVariable String username, Model model) {
-//        model.addAttribute("title", "Профиль: " + username);
-//        model.addAttribute("username", username);
-//        return "profile"; // Файл: src/main/resources/templates/profile.html
-//    }
 
-//    @GetMapping(value = "/profile/{username}", produces = MediaType.TEXT_HTML_VALUE)
-//    public String profile(
-//            @PathVariable String username,
-//            Model model
-//    ) {
-//        model.addAttribute("username", username);
-//        return "profile"; // Имя файла без .html
-//    }
 
-    // Страница друзей
     @GetMapping("/friends")
     public String friends(Model model) {
         model.addAttribute("title", "Друзья");
@@ -102,6 +91,20 @@ public class ViewController {
         return "friend-profile";
     }
 
+    @GetMapping("/trips/edit/{id}")
+    public String showEditTripForm(@PathVariable Long id, Model model, Authentication authentication) {
+        Trip trip = tripService.getTripById(id)
+                .orElseThrow(() -> new RuntimeException("Trip not found"));
+
+        User currentUser = (User) authentication.getPrincipal();
+        if (!trip.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("You can only edit your own trips");
+        }
+
+        model.addAttribute("trip", trip);
+        model.addAttribute("editMode", true); // Флаг для режима редактирования
+        return "add-trip";
+    }
 
 
 }

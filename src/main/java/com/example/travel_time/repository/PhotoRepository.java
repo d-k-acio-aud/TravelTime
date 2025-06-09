@@ -20,4 +20,8 @@ public interface PhotoRepository extends JpaRepository<Photo, Long> {
 
     @Query("SELECT p FROM Photo p LEFT JOIN FETCH p.trip t LEFT JOIN FETCH t.user WHERE p.user.id = :userId")
     List<Photo> findPhotosByUserIdWithDetails(@Param("userId") Long userId);
+
+    long countByUserId(Long userId);
+
+    List<Photo> findByUserId(Long userId);
 }

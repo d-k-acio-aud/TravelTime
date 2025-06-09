@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Time | Home</title>
-    <!-- Пример подключения -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="/bla.png">
+
     <style>
         :root {
             --primary-color: #4e73df;
+            --secondary-color: #f8f9fa;
             --sidebar-width: 250px;
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             min-height: 100vh;
-            background-color: #f8f9fa;
+            background-color: var(--secondary-color);
             margin: 0;
+            color: #333;
         }
 
         /* Sidebar */
@@ -32,6 +35,7 @@
             position: fixed;
             height: 100vh;
             padding: 20px 0;
+            z-index: 100;
         }
 
         .sidebar-brand {
@@ -44,13 +48,14 @@
 
         .nav-link {
             padding: 12px 25px;
-            color: #333;
+            color: #555;
             border-left: 4px solid transparent;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
 
         .nav-link:hover, .nav-link.active {
-            background: #f1f1f1;
+            background: rgba(78, 115, 223, 0.1);
             border-left: 4px solid var(--primary-color);
             color: var(--primary-color);
         }
@@ -59,109 +64,216 @@
             width: 25px;
             text-align: center;
             margin-right: 10px;
+            color: inherit;
         }
 
-        /* Main Content */
         .main-content {
             margin-left: var(--sidebar-width);
             flex: 1;
-            padding: 30px;
+            padding: 1.5rem;
+            max-width: none; /* Убрано ограничение по ширине */
         }
 
+        /* Welcome Section */
         .welcome-section {
             background: white;
             border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 30px;
+            padding: 1.25rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
         }
 
+        .welcome-section h2 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 1.5rem;
+        }
+
+        /* Trip Cards - компактный вариант */
+        .trip-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+        }
+
+        .trip-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .trip-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, var(--primary-color), #3a56b0);
+            color: white;
+        }
+
+        .trip-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .trip-dates {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.25rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .trip-body {
+            padding: 1.25rem;
+        }
+
+        .trip-description {
+            line-height: 1.6;
+            color: #555;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        /* Стили для фотографий */
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-preview-wrapper {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            background: #f5f5f5;
+        }
+
+        .image-preview-wrapper:hover {
+            transform: scale(1.02);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        .image-preview {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .trip-footer {
+            padding: 1rem 1.25rem;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+        }
+
+        .trip-destination {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+
+        .trip-destination i {
+            margin-right: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .trip-actions .btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            border-radius: 6px;
+        }
+
+        /* No Trips */
+        .no-trips {
+            width: 100%;
+            min-height: 300px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .no-trips i {
+            font-size: 3.5rem;
+            color: #d0d0d0;
+            margin-bottom: 1rem;
+        }
+
+        .no-trips h3 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .no-trips p {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .no-trips .btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+
+
+
+        /* Add Trip Button */
         .add-trip-btn {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 90px;
-            height: 90px;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: var(--primary-color);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.0rem;
-            box-shadow: 0 4px 15px rgba(78, 115, 223, 0.4);
-            z-index: 100;
-            transition: all 0.3s;
+            font-size: 1.5rem;
+            box-shadow: 0 3px 10px rgba(78, 115, 223, 0.3);
+            z-index: 90;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
         }
 
         .add-trip-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(78, 115, 223, 0.5);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(78, 115, 223, 0.4);
+            background: #3a56b0;
         }
-        .add-trip-btn i {
-            line-height: 1;
-            text-decoration: none;
-            border: none;
-            box-shadow: none;
-            font-style: normal; /* на всякий случай */
-        }
-
-        .trip-card {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
-            margin-bottom: 25px;
-            transition: all 0.3s;
-        }
-
-        .trip-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
-        }
-
-        .trip-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .trip-body {
-            padding: 20px;
-        }
-
-        .trip-footer {
-            padding: 15px 20px;
-            background: #f9f9f9;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .no-trips {
-            text-align: center;
-            padding: 50px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        footer {
-            margin-left: var(--sidebar-width);
-            padding: 20px;
-            text-align: center;
-            color: #6c757d;
-            font-size: 0.9rem;
-            border-top: 1px solid #eee;
-        }
-
-        .trip-description {
-            white-space: pre-wrap;
-            line-height: 1.6;
-            color: #555;
-        }
-
     </style>
 </head>
 <body>
@@ -183,13 +295,11 @@
         <a class="nav-link" href="/photos">
             <i class="fas fa-images"></i> Photos
         </a>
-        <!-- В боковой панели замените форму на эту -->
         <form th:action="@{/api/auth/logout}" method="POST" class="mt-4 px-3">
             <button type="submit" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
                 <i class="fas fa-sign-out-alt"></i> Log Out
             </button>
         </form>
-
     </nav>
 </div>
 
@@ -204,48 +314,53 @@
     <!-- Trips Section -->
     <div th:if="${trips == null or trips.isEmpty()}">
         <div class="no-trips">
-            <i class="fas fa-umbrella-beach fa-4x mb-4" style="color: #ddd;"></i>
+            <i class="fas fa-umbrella-beach"></i>
             <h3>No trips yet</h3>
-            <p class="text-muted mb-4">Start your travel journey by adding your first trip!</p>
-            <a href="/trips/new" class="btn btn-primary" id="addFirstTrip">
-                <i class="fas fa-plus me-2"></i> Add Your First Trip
+            <p class="text-muted mb-3">Start your travel journey by adding your first trip!</p>
+            <a href="/trips/new" class="btn btn-primary d-flex align-items-center gap-2" id="addFirstTrip">
+
+                <span>Add Your First Trip</span>
             </a>
         </div>
     </div>
 
-    <div th:each="trip : ${trips}">
-        <div class="trip-card">
+    <div th:unless="${trips == null or trips.isEmpty()}">
+        <div class="trip-card" th:each="trip : ${trips}">
             <div class="trip-header">
                 <h4 th:text="${trip.name}"></h4>
-                <span class="text-muted" th:text="${trip.startDate}"></span>
-                <span class="text-muted" th:text="${trip.endDate}"></span>
+                <div class="trip-dates">
+                    <span th:text="${trip.startDate}"></span>
+                    <span>-</span>
+                    <span th:text="${trip.endDate}"></span>
+                </div>
             </div>
 
             <div class="trip-body">
-                <p th:text="${trip.description}"></p>
+                <p class="trip-description" th:text="${trip.description}"></p>
 
-                <div class="image-preview-container">
+                <div class="image-preview-container" th:if="${not #lists.isEmpty(trip.photos)}">
                     <a th:each="photo : ${trip.photos}"
                        th:href="${photo.url}"
                        class="glightbox"
                        th:attr="data-gallery='trip-' + ${trip.id}">
-                        <img th:src="${photo.url}"
-                             class="image-preview"
-                             style="width: 100px; height: 100px; margin-right: 10px;">
+                        <div class="image-preview-wrapper">
+                            <img th:src="${photo.url}"
+                                 class="image-preview"
+                                 alt="Trip photo">
+                        </div>
                     </a>
                 </div>
-
-
             </div>
+
             <div class="trip-footer">
-                <span><i class="fas fa-map-marker-alt me-2"></i> <span th:text="${trip.destination}"></span></span>
-                <!-- <div>
-                    <button class="btn btn-sm btn-outline-primary me-2">
-                        <i class="far fa-heart"></i> <span th:text="${trip.likes}"></span>
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary">
-                        <i class="far fa-comment"></i> <span th:text="${trip.comments}"></span>
-                    </button>-->
+                <div class="trip-destination">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span th:text="${trip.destination}"></span>
+                </div>
+                <div class="trip-actions">
+                    <a th:href="@{/trips/edit/{id}(id=${trip.id})}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
                 </div>
             </div>
         </div>
@@ -253,45 +368,36 @@
 </div>
 
 <!-- Add Trip Button -->
-<a href="/trips/new" class="add-trip-btn" title="Add New Trip">
-    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-</a>
+<button class="add-trip-btn" title="Add New Trip" onclick="window.location.href='/trips/new'">
+    <i class="fas fa-plus"></i>
+</button>
 
-
-<!-- Footer -->
-<footer>
-    <p>©2025 Travel Time. All rights reserved.</p>
-</footer>
-
-<!-- Bootstrap & JS -->
+<!-- JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:src="@{/js/home.js}"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const modal = document.getElementById('lightboxModal');
-        const modalImg = document.getElementById('lightboxImage');
+    document.addEventListener('DOMContentLoaded', function() {
+        const lightbox = GLightbox({
+            selector: '.glightbox',
+            touchNavigation: true,
+            loop: true,
+            openEffect: 'zoom',
+            closeEffect: 'fade'
+        });
 
+        document.getElementById('addFirstTrip')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/trips/new';
+        });
 
-        modal.addEventListener('click', function () {
-            modal.style.display = 'none';
-            modalImg.src = '';
+        document.querySelector('form[action*="logout"]')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to log out?')) {
+                this.submit();
+            }
         });
     });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
-<script>
-    const lightbox = GLightbox({
-        selector: '.glightbox',
-        touchNavigation: true,
-        loop: true,
-        openEffect: 'zoom',
-        closeEffect: 'fade'
-    });
-</script>
-
 </body>
 </html>

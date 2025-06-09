@@ -6,6 +6,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
+    <link rel="icon" type="image/png" href="/bla.png">
+
     <style>
         :root {
             --primary-color: #4e73df;
@@ -18,32 +20,39 @@
             background-color: #f8f9fa;
             margin: 0;
         }
-        .sidebar {
-            width: var(--sidebar-width);
-            background: white;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            position: fixed;
-            height: 100vh;
-            padding: 20px 0;
+
+        /* Стили для фотографий */
+        .image-preview-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
-        .sidebar-brand {
-            text-align: center;
-            padding: 20px;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
+
+        .image-preview-wrapper {
+            position: relative;
+            width: 100%;
+            height: 180px; /* Фиксированная высота вместо квадрата */
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            background: #f5f5f5;
         }
-        .nav-link {
-            padding: 12px 25px;
-            color: #333;
-            border-left: 4px solid transparent;
-            transition: all 0.3s;
+
+        .image-preview-wrapper:hover {
+            transform: scale(1.03);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        .nav-link:hover, .nav-link.active {
-            background: #f1f1f1;
-            border-left: 4px solid var(--primary-color);
-            color: var(--primary-color);
+
+        .image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: pointer;
         }
+
+        /* Основные стили */
         .nav-link i {
             width: 25px;
             text-align: center;
@@ -61,24 +70,40 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             margin-bottom: 30px;
         }
+
+        /* Стили карточек с синим градиентом */
         .trip-card {
             background: white;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
             margin-bottom: 25px;
             transition: all 0.3s;
         }
         .trip-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
-        .trip-header, .trip-footer {
+
+        /* Вот этот блок делает синюю шапку */
+        .trip-header {
             padding: 15px 20px;
             border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, var(--primary-color), #3a56b0);
+            color: white;
             display: flex;
             justify-content: space-between;
         }
+
+        .trip-header h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .trip-header .text-muted {
+            color: rgba(255,255,255,0.8) !important;
+        }
+
         .trip-body {
             padding: 20px;
         }
@@ -87,6 +112,15 @@
             line-height: 1.6;
             color: #555;
         }
+
+        .trip-footer {
+            padding: 15px 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
         .no-trips {
             text-align: center;
             padding: 50px;
@@ -130,14 +164,16 @@
             </div>
             <div class="trip-body">
                 <p class="trip-description" th:text="${trip.description}"></p>
-                <div class="image-preview-container">
+                <div class="image-preview-container" th:if="${not #lists.isEmpty(trip.photos)}">
                     <a th:each="photo : ${trip.photos}"
                        th:href="${photo.url}"
                        class="glightbox"
                        th:attr="data-gallery='trip-' + ${trip.id}">
-                        <img th:src="${photo.url}"
-                             class="image-preview"
-                             style="width: 100px; height: 100px; margin-right: 10px;">
+                        <div class="image-preview-wrapper">
+                            <img th:src="${photo.url}"
+                                 class="image-preview"
+                                 alt="Trip photo">
+                        </div>
                     </a>
                 </div>
             </div>

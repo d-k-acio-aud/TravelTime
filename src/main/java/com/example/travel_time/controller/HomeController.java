@@ -19,15 +19,15 @@ public class HomeController {
     private final UserService userService;
 
     @GetMapping("/home")
-    public String homePage(Principal principal, Model model) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
+    public String homePage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        if (userDetails == null) return "redirect:/login";
 
-        String username = principal.getName();
-        model.addAttribute("username", username);
+        String username = userDetails.getUsername();
+
+        model.addAttribute("username", userDetails.getUsername());
         model.addAttribute("trips", tripService.getUserTrips(username));
         model.addAttribute("tripCount", tripService.getUserTripCount(username));
         return "home";
     }
+
 }

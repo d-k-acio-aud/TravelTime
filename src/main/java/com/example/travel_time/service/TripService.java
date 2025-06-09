@@ -30,7 +30,7 @@ public class TripService {
     }
 
     public List<Trip> getUserTrips(String username) {
-        return tripRepository.findByUserUsername(username);
+        return tripRepository.findByUserUsernameOrderByStartDateDesc(username);
     }
 
     public long getUserTripCount(String username) {
@@ -68,4 +68,9 @@ public class TripService {
                 .orElseThrow(() -> new RuntimeException("Trip not found"))
                 .getPhotos();
     }
+
+    public int getUserTripsCount(Long userId) {
+        return tripRepository.countByUserId(userId);
+    }
+
 }

@@ -1,68 +1,81 @@
 package com.example.travel_time.service;
-
-import com.example.travel_time.AuthRequest;
+import com.example.travel_time.dto.AuthRequestDto;
+import com.example.travel_time.dto.TokenResponseDto;
+import com.example.travel_time.dto.RegisterRequestDto;
 import com.example.travel_time.model.Role;
 import com.example.travel_time.model.User;
 import com.example.travel_time.repository.UserRepository;
-import com.example.travel_time.util.JwtUtil;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
+
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsService userDetailsService;
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
 
-    public ResponseEntity<String> login(AuthRequest authRequest, HttpServletResponse response) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getUsername());
 
-        if (!passwordEncoder.matches(authRequest.getPassword(), userDetails.getPassword())) {
-            return ResponseEntity.status(401).body("Invalid credentials");
-        }
+    public void addJwtToCookie(String token, HttpServletResponse response) {
+        Cookie cookie = new Cookie("jwt", token);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(24 * 60 * 60 * 30);
+        response.addCookie(cookie);
+    }
+    public ResponseEntity<Void> logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("jwt", null);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        response.setStatus(HttpServletResponse.SC_FOUND); // 302
+        response.setHeader("Location", "/login");
+        return ResponseEntity.status(HttpStatus.FOUND).build();
+    }
 
+
+    public TokenResponseDto authenticate(AuthRequestDto request, HttpServletResponse response) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
         );
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow();
+        var jwtToken = jwtService.generateToken(user);
+        addJwtToCookie(jwtToken, response);
+        return new TokenResponseDto(jwtToken);
+    }
+    public TokenResponseDto register(RegisterRequestDto request, HttpServletResponse response) {
+        var user = User.builder()
+                .email(request.getEmail())
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
+                .build();
 
-        var jwtToken = JwtUtil.generateToken(userDetails.getUsername());
-        jwtUtil.addJwtToCookie(jwtToken, response);
-        response.setHeader("Location", "/home");
-        return null;
+
+        userRepository.save(user);
+        var jwtToken = jwtService.generateToken(user);
+        addJwtToCookie(jwtToken, response);
+        return new TokenResponseDto(jwtToken);
     }
 
-    public ResponseEntity<String> register(AuthRequest authRequest) {
-        if (userRepository.findByUsername(authRequest.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body("User already exists");
-        }
 
-        User newUser = new User();
-        newUser.setUsername(authRequest.getUsername());
-        newUser.setPassword(passwordEncoder.encode(authRequest.getPassword()));
-        newUser.setEmail(authRequest.getEmail());
-        //newUser.setName(authRequest.getName());
-        //newUser.setRole(authRequest.getRole());//Динамически устанавливаем роль
-        newUser.setRole(Role.USER); // Явно устанавливаем роль
-        userRepository.save(newUser);
-
-        return ResponseEntity.ok("Registered");
-    }
-
-//    public void logout(HttpServletResponse response) throws IOException {
-//        jwtUtil.logout(response);
-//        response.sendRedirect("/login");
-//    }
 }
+

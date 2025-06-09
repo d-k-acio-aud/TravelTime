@@ -2,15 +2,17 @@ function setupLoginForm() {
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
+
         const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
                 password: document.getElementById('password').value
             }),
             credentials: 'include'
         });
+
 
         if (response.ok) {
             window.location.href = '/home';
@@ -19,14 +21,17 @@ function setupLoginForm() {
         }
     });
 
+
     // Показываем сообщение об успешной регистрации, если оно есть в URL
     const urlParams = new URLSearchParams(window.location.search);
     const successMessage = urlParams.get('success');
+
 
     if (successMessage) {
         showSuccessAlert(successMessage);
     }
 }
+
 
 function showSuccessAlert(message) {
     const alertDiv = document.createElement('div');
@@ -34,11 +39,13 @@ function showSuccessAlert(message) {
     alertDiv.style.zIndex = '1000';
     alertDiv.role = 'alert';
     alertDiv.innerHTML = `
-        <strong>Успех!</strong> ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+       <strong>Успех!</strong> ${message}
+       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+   `;
+
 
     document.body.appendChild(alertDiv);
+
 
     // Автоматически скрываем через 5 секунд
     setTimeout(() => {
@@ -47,4 +54,6 @@ function showSuccessAlert(message) {
     }, 5000);
 }
 
+
 document.addEventListener('DOMContentLoaded', setupLoginForm);
+

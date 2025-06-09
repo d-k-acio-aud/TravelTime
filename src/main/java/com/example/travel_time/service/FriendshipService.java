@@ -1,5 +1,6 @@
 package com.example.travel_time.service;
 
+import com.example.travel_time.dto.FriendDto;
 import com.example.travel_time.model.Friendship;
 import com.example.travel_time.model.User;
 import com.example.travel_time.repository.FriendshipRepository;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.example.travel_time.dto.FriendRequestDto;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -48,18 +51,22 @@ public class FriendshipService {
         friendshipRepository.save(friendship);
     }
 
-    public List<User> getFriends(Long userId) {
+    public List<FriendDto> getFriends(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        List<Friendship> friendships = friendshipRepository.findByRequesterOrReceiverAndAcceptedTrue(user, user);
+        List<Friendship> friendships = friendshipRepository.findAcceptedFriendships(user);
 
         return friendships.stream()
-                .map(f -> f.getRequester().equals(user) ? f.getReceiver() : f.getRequester())
+                .map(f -> {
+                    User friend = f.getRequester().equals(user) ? f.getReceiver() : f.getRequester();
+                    return new FriendDto(f.getId(), friend.getUsername());
+                })
                 .toList();
     }
 
-//    public List<Friendship> getPendingRequests(Long userId) {
+
+    //    public List<Friendship> getPendingRequests(Long userId) {
 //        User user = userRepository.findById(userId)
 //                .orElseThrow(() -> new EntityNotFoundException("User not found"));
 //
@@ -75,11 +82,11 @@ public class FriendshipService {
         }
 
 
-    public boolean areFriends(User a, User b) {
-        return friendshipRepository.findByRequesterOrReceiverAndAcceptedTrue(a, a)
-                .stream()
-                .anyMatch(f -> f.getRequester().equals(b) || f.getReceiver().equals(b));
-    }
+//    public boolean areFriends(User a, User b) {
+//        return friendshipRepository.findByRequesterOrReceiverAndAcceptedTrue(a, a)
+//                .stream()
+//                .anyMatch(f -> f.getRequester().equals(b) || f.getReceiver().equals(b));
+//    }
 //    public List<FriendRequestDto> getPendingRequestDtos(Long userId) {
 //        User user = userRepository.findById(userId)
 //                .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -93,7 +100,7 @@ public class FriendshipService {
 //                .toList();
 //    }
     public boolean isFriend(User currentUser, User other) {
-        return friendshipRepository.findByRequesterOrReceiverAndAcceptedTrue(currentUser, currentUser)
+        return friendshipRepository.findAcceptedFriendships(currentUser)
                 .stream()
                 .anyMatch(f -> f.getRequester().equals(other) || f.getReceiver().equals(other));
     }
@@ -107,18 +114,48 @@ public class FriendshipService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        List<FriendRequestDto> incoming = friendshipRepository.findByReceiverAndAcceptedFalse(user)
-                .stream()
+        return Stream.concat(
+                friendshipRepository.findByReceiverAndAcceptedFalse(user).stream()
+                        .map(f -> new FriendRequestDto(f.getId(), f.getRequester().getUsername(), true)),
+                friendshipRepository.findByRequesterAndAcceptedFalse(user).stream()
+                        .map(f -> new FriendRequestDto(f.getId(), f.getReceiver().getUsername(), false))
+        ).collect(Collectors.toList());
+    }
+    public int getFriendsCount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        return getFriends(user.getId()).size();
+    }
+
+    public List<FriendRequestDto> getIncomingRequests(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return friendshipRepository.findByReceiverAndAcceptedFalse(user).stream()
                 .map(f -> new FriendRequestDto(f.getId(), f.getRequester().getUsername(), true))
                 .toList();
+    }
 
-        List<FriendRequestDto> outgoing = friendshipRepository.findByRequesterAndAcceptedFalse(user)
-                .stream()
+    public List<FriendRequestDto> getOutgoingRequests(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        return friendshipRepository.findByRequesterAndAcceptedFalse(user).stream()
                 .map(f -> new FriendRequestDto(f.getId(), f.getReceiver().getUsername(), false))
                 .toList();
+    }
 
-        incoming.addAll(outgoing);
-        return incoming;
+
+    public void deleteFriendship(Long friendshipId, Long currentUserId) {
+        Friendship friendship = friendshipRepository.findById(friendshipId)
+                .orElseThrow(() -> new EntityNotFoundException("Friendship not found"));
+
+        if (!friendship.getRequester().getId().equals(currentUserId) &&
+                !friendship.getReceiver().getId().equals(currentUserId)) {
+            throw new SecurityException("You cannot delete this friendship");
+        }
+
+        friendshipRepository.delete(friendship);
     }
 
 

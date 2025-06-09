@@ -32,6 +32,10 @@ public class PhotoService {
     private final UserRepository userRepository;
     private final TripRepository tripRepository;
 
+    public long getUserPhotosCount(Long userId) {
+        return photoRepository.countByUserId(userId);
+    }
+
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -85,7 +89,9 @@ public class PhotoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Photo not found or not owned by user"));
 
         try {
+            log.info("Attempting to delete from S3: {}", photo.getUrl());
             s3Service.deleteFile(photo.getUrl());
+            log.info("Deleted from S3");
             photoRepository.delete(photo);
         } catch (RuntimeException e) {
             log.error("Failed to delete photo with ID: {}", photoId, e);
@@ -97,5 +103,9 @@ public class PhotoService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return photoRepository.findPhotosByUserIdWithDetails(user.getId());
+    }
+
+    public List<Photo> getUserPhotos(Long userId) {
+        return photoRepository.findByUserId(userId);
     }
 }

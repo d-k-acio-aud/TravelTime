@@ -31,4 +31,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    async function deleteTrip(tripId) {
+        if (confirm('Are you sure you want to delete this trip?')) {
+            try {
+                const token = document.querySelector('meta[name="_csrf"]').content;
+                const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+                const response = await fetch(`/api/trips/delete_trip/${tripId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        [header]: token
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to delete trip');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error deleting trip');
+            }
+        }
+    }
+
 });
