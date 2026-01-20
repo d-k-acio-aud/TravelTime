@@ -33,16 +33,11 @@ public class UserController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-//    @PostMapping("/register")
-//    public ResponseEntity<User> registerUser(@RequestBody User user) {
-//        User savedUser = userService.registerUser(user);
-//        return ResponseEntity.ok(savedUser);
-//    }
 
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User newUser) {
-        System.out.println("Updating user: " + id); // Логируем
-        System.out.println("New data: " + newUser); // Смотрим что пришло
+        System.out.println("Updating user: " + id); 
+        System.out.println("New data: " + newUser); 
         try {
             User updatedUser = userService.updateUser(id, newUser);
             return ResponseEntity.ok(updatedUser);
@@ -72,7 +67,6 @@ public class UserController {
         }
 
         User user = userOptional.get();
-        // trips уже подгружены благодаря @OneToMany в сущности User
         return ResponseEntity.ok(user);
     }
 
